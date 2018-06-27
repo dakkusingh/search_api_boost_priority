@@ -17,7 +17,7 @@ use Drupal\user\RoleInterface;
  * Adds a boost to indexed items based on User Role.
  *
  * @SearchApiProcessor(
- *   id = "role_boost",
+ *   id = "search_api_boost_priority_role",
  *   label = @Translation("Role specific boosting"),
  *   description = @Translation("Adds a boost to indexed items based on User Role."),
  *   stages = {
@@ -55,10 +55,8 @@ class RoleBoost extends ProcessorPluginBase implements PluginFormInterface {
    */
   public function defaultConfiguration() {
     return [
-      'weight' => 0,
-      'allowed_entity_types' => [
-        'node',
-        'comment',
+      'boost_table' => [
+        'weight' => '0.0',
       ],
     ];
   }
@@ -82,9 +80,11 @@ class RoleBoost extends ProcessorPluginBase implements PluginFormInterface {
 
     // Make a dummy array to add custom weight.
     foreach ($roles as $roleId => $roleName) {
-      $weight = $masterRoles[$roleId]->getWeight();
-      if (isset($this->configuration['boost_table']) && isset($this->configuration['boost_table'][$roleId]['weight'])) {
+      if (isset($this->configuration['boost_table'][$roleId]['weight'])) {
         $weight = $this->configuration['boost_table'][$roleId]['weight'];
+      }
+      elseif(isset($this->configuration['boost_table']['weight'])) {
+        $weight = $this->configuration['boost_table']['weight'];
       }
 
       $roleWeight[$roleId]['id'] = $roleId;
@@ -206,13 +206,11 @@ class RoleBoost extends ProcessorPluginBase implements PluginFormInterface {
 
     // Construct array for role sorting.
     foreach ($userRoles as $roleId) {
-      $roleWeights[$roleId]['role'] = $roleId;
-      $roleWeights[$roleId]['weight'] = $boosts[$roleId]['weight'];
+      $roleWeights[] = (double) $boosts[$roleId]['weight'];
     }
 
-    // Sort the roles by weight.
-    uasort($roleWeights, ['Drupal\Component\Utility\SortArray', 'sortByWeightElement']);
-    $boost = (double) array_values($roleWeights)[0]['weight'];
+    // Get highest weight for this user.
+    $boost = max($roleWeights);
     return $boost;
   }
 

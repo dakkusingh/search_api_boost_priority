@@ -16,7 +16,7 @@ use Drupal\statistics\StatisticsViewsResult;
  * Adds a boost to indexed items based on Node Statistics.
  *
  * @SearchApiProcessor(
- *   id = "statistics_boost",
+ *   id = "search_api_boost_priority_statistics",
  *   label = @Translation("Statistics specific boosting"),
  *   description = @Translation("Adds a boost to indexed items based on Node Statistics."),
  *   stages = {
@@ -74,12 +74,20 @@ class StatisticsBoost extends ProcessorPluginBase implements PluginFormInterface
    */
   public static function supportsIndex(IndexInterface $index) {
     foreach ($index->getDatasources() as $datasource) {
-      // TODO use defaultConfiguration allowed_entity_types.
-      if ($datasource->getEntityTypeId() == 'node') {
+      $allowedEntityTypes = self::allowedEntityTypes();
+      $entityType = $datasource->getEntityTypeId();
+
+      if (in_array($entityType, $allowedEntityTypes)) {
         return TRUE;
       }
     }
     return FALSE;
+  }
+
+  private static function allowedEntityTypes() {
+    return [
+      'node',
+    ];
   }
 
   /**
@@ -87,9 +95,8 @@ class StatisticsBoost extends ProcessorPluginBase implements PluginFormInterface
    */
   public function defaultConfiguration() {
     return [
-      'weight' => 0,
-      'allowed_entity_types' => [
-        'node',
+      'boost_table' => [
+        'weight' => '0.0',
       ],
     ];
   }
@@ -107,11 +114,14 @@ class StatisticsBoost extends ProcessorPluginBase implements PluginFormInterface
     ];
 
     $statScale = static::$boostScale;
-    $weight = 0;
+
     // Loop over each scale and create a form row.
     foreach ($statScale as $scaleId => $scaleDesc) {
-      if (isset($this->configuration['boost_table']) && isset($this->configuration['boost_table'][$scaleId]['weight'])) {
+      if (isset($this->configuration['boost_table'][$scaleId]['weight'])) {
         $weight = $this->configuration['boost_table'][$scaleId]['weight'];
+      }
+      elseif(isset($this->configuration['boost_table']['weight'])) {
+        $weight = $this->configuration['boost_table']['weight'];
       }
 
       // Table columns containing raw markup.
@@ -159,7 +169,6 @@ class StatisticsBoost extends ProcessorPluginBase implements PluginFormInterface
       }
 
       if ($boost) {
-        ksm($boost);
         $item->setBoost($boost);
       }
     }
@@ -239,6 +248,7 @@ class StatisticsBoost extends ProcessorPluginBase implements PluginFormInterface
     // Loop over and find boost.
     foreach ($boosts as $boostId => $boostWeight) {
       if ($totalCount > 0 && $totalCount <= $boostId) {
+        ksm($boostWeight['weight']);
         return (double) $boostWeight['weight'];
       }
     }
