@@ -248,7 +248,6 @@ class StatisticsBoost extends ProcessorPluginBase implements PluginFormInterface
     // Loop over and find boost.
     foreach ($boosts as $boostId => $boostWeight) {
       if ($totalCount > 0 && $totalCount <= $boostId) {
-        ksm($boostWeight['weight']);
         return (double) $boostWeight['weight'];
       }
     }
