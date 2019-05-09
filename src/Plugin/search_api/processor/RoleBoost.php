@@ -83,7 +83,7 @@ class RoleBoost extends ProcessorPluginBase implements PluginFormInterface {
       if (isset($this->configuration['boost_table'][$roleId]['weight'])) {
         $weight = $this->configuration['boost_table'][$roleId]['weight'];
       }
-      elseif(isset($this->configuration['boost_table']['weight'])) {
+      elseif (isset($this->configuration['boost_table']['weight'])) {
         $weight = $this->configuration['boost_table']['weight'];
       }
 
