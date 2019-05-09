@@ -85,7 +85,10 @@ class StatisticsBoost extends ProcessorPluginBase implements PluginFormInterface
   }
 
   /**
+   * Whitelist of allowed entity types.
    *
+   * @return array
+   *   Whitelist of allowed entity types.
    */
   private static function allowedEntityTypes() {
     return [
